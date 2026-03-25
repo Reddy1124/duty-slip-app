@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Duty Slip</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f3ef;
+      --card: #ffffff;
+      --border: #d8d3c8;
+      --border-strong: #b0a898;
+      --accent: #1a3a2a;
+      --accent2: #2e6b4f;
+      --accent-light: #e8f4ec;
+      --amber: #c8860a;
+      --amber-light: #fef6e4;
+      --blue: #1a5fa8;
+      --blue-light: #e8f1fb;
+      --wa: #25D366;
+      --text: #1c1c1c;
+      --text-mid: #555;
+      --text-muted: #999;
+      --danger: #c0392b;
+      --danger-light: #fdecea;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      background: var(--accent);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .site-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 0.04em; text-transform: uppercase; }
+    .site-logo span { color: #7ed4a0; }
+    .slip-number { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; }
+
+    /* ── Status bar ── */
+    .status-bar { background: var(--accent2); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .status-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.65); }
+    .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; background: rgba(255,255,255,0.18); padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .status-badge.active { background: #7ed4a0; color: #0f2a1a; font-weight: 700; }
+    .status-badge.done   { background: #f9d94e; color: #1a2a00; font-weight: 700; }
+
+    /* ── Container ── */
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+    /* ── Card ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+    .card-header { background: var(--accent); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+    .card-header.amber { background: var(--amber); }
+    .card-header.green { background: var(--accent2); }
+    .card-header.blue  { background: var(--blue); }
+    .card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #fff; }
+    .card-icon { font-size: 14px; }
+    .card-body { padding: 16px; }
+
+    /* ── Field grid ── */
+    .slip-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+
+    input, select, textarea {
+      background: #fafaf8; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 500;
+      padding: 11px 13px; width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      -webkit-appearance: none;
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    input::placeholder, textarea::placeholder { color: #c0bdb5; font-weight: 400; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent2); background: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(46,107,79,0.12);
+    }
+    input[readonly] {
+      background: #f0ede7; color: var(--accent);
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; cursor: not-allowed;
+    }
+    input.calc-result {
+      background: var(--amber-light); color: var(--amber);
+      font-family: 'JetBrains Mono', monospace; font-weight: 700; border-color: #e8c36a;
+    }
+    input.field-error, select.field-error, textarea.field-error {
+      border-color: var(--danger) !important; background: var(--danger-light) !important;
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.10) !important;
+    }
+    .hint { font-size: 10px; font-weight: 700; color: var(--danger); display: none; margin-top: 1px; }
+    .hint.show  { display: block; }
+    .hint.warn  { color: var(--amber); }
+
+    /* ── Guest uses grid ── */
+    .gt-head { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1.2fr 1.5fr; gap: 6px; margin-bottom: 6px; }
+    .gt-head span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); text-align: center; }
+    .gt-head span:first-child { text-align: left; }
+    .gt-row { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1.2fr 1.5fr; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .gt-row input { padding: 9px 8px; font-size: 14px; text-align: center; }
+    .gt-row input:first-child { text-align: left; }
+    .gt-label { font-size: 13px; font-weight: 700; color: var(--text); padding: 8px 0; }
+
+    /* ── Trip action buttons ── */
+    .trip-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .btn-start {
+      background: var(--accent2); color: #fff; border: none; border-radius: var(--radius-sm);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 18px 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.1s, filter 0.1s;
+    }
+    .btn-end {
+      background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 18px 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.1s, filter 0.1s;
+    }
+    .btn-start:active, .btn-end:active { transform: scale(0.97); }
+
+    /* ── Info boxes (GPS / timestamp) ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ibox { background: #f0ede7; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; transition: background 0.2s; }
+    .ibox.live { background: var(--accent-light); border-color: rgba(46,107,79,0.3); }
+    .ibox-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; }
+    .ibox-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text-muted); word-break: break-all; }
+    .ibox.live .ibox-val { color: var(--accent2); font-weight: 600; }
+
+    /* ── Odometer upload ── */
+    .odo-label {
+      display: block; background: var(--blue-light); border: 2px dashed rgba(26,95,168,0.35);
+      border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .odo-label:hover { background: #d9e9f8; }
+    .odo-label input { display: none; }
+    .odo-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+    .odo-text { font-size: 14px; font-weight: 700; color: var(--blue); }
+    .odo-sub  { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .odo-preview { display: none; margin-top: 12px; }
+    .odo-preview.show { display: block; }
+    .odo-preview img { width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); max-height: 230px; object-fit: cover; }
+    .odo-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .odo-ok  { font-size: 12px; font-weight: 700; color: var(--accent2); }
+    .odo-rm  { background: none; border: none; font-size: 12px; font-weight: 700; color: var(--danger); text-transform: uppercase; cursor: pointer; padding: 2px 6px; }
+
+    /* ── Release / Next day ── */
+    .release-row  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .next-day-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* ── Summary box ── */
+    .summary-box { background: var(--accent); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sum-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+    .sum-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; color: #fff; }
+    .sum-value.large { font-size: 32px; font-weight: 400; color: #7ed4a0; }
+
+    /* ── Terms ── */
+    .terms-box { background: #fafaf8; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px; }
+    .terms-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+    .terms-list { list-style: none; display: flex; flex-direction: column; gap: 5px; counter-reset: item; }
+    .terms-list li { font-size: 12px; color: var(--text-mid); display: flex; gap: 6px; line-height: 1.4; }
+    .terms-list li::before { content: counter(item); counter-increment: item; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--accent2); background: var(--accent-light); border-radius: 4px; padding: 1px 5px; flex-shrink: 0; height: fit-content; }
+
+    /* ── Feedback ── */
+    .feedback-box { background: var(--amber-light); border: 1px solid #e8c36a; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .feedback-icon { font-size: 20px; }
+    .feedback-text { font-size: 14px; font-weight: 700; color: var(--amber); }
+
+    /* ── Main action buttons ── */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .btn {
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform 0.1s, filter 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-save    { background: var(--accent);  color: #fff; grid-column: 1 / -1; font-size: 18px; padding: 16px; }
+    .btn-wa      { background: var(--wa);      color: #fff; grid-column: 1 / -1; font-size: 17px; padding: 15px; }
+    .btn-clear   { background: #fff; border: 1.5px solid var(--border-strong); color: var(--text-mid); }
+    .btn-print   { background: var(--amber); color: #fff; }
+    .btn-save:hover, .btn-wa:hover { filter: brightness(1.1); }
+
+    /* ── Saved slips ── */
+    .saved-section { margin-top: 8px; }
+    .saved-title { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .saved-count { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .slip-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; animation: fadeUp 0.22s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .sc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .sc-name { font-size: 16px; font-weight: 700; line-height: 1.2; }
+    .sc-ref  { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    .sc-saved { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber); margin-top: 2px; }
+    .sc-amount { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 500; color: var(--accent2); white-space: nowrap; }
+    .sc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { font-size: 11px; font-weight: 600; color: var(--text-mid); background: #f0ede7; border-radius: 6px; padding: 3px 8px; }
+    .sc-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .btn-sm { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 14px; border-radius: 6px; cursor: pointer; border: none; transition: filter 0.12s; }
+    .btn-sm:active { filter: brightness(0.9); }
+    .btn-sm-del  { background: #fdecea; color: var(--danger); }
+    .btn-sm-load { background: var(--accent-light); color: var(--accent2); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 12px 22px; border-radius: 40px;
+      z-index: 9999; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none; max-width: 92vw; text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.t-ok   { background: var(--accent2); }
+    .toast.t-err  { background: var(--danger); }
+    .toast.t-warn { background: var(--amber); color: #000; }
+    .toast.t-info { background: var(--blue); }
+
+    .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+    @media (max-width: 420px) {
+      .gt-head, .gt-row { grid-template-columns: 1.8fr 1.3fr 1.3fr 1.3fr 1fr 1.3fr; gap: 4px; }
+      .gt-head span, .gt-row input { font-size: 9px; padding: 7px 5px; }
+      .release-row, .next-day-row { grid-template-columns: 1fr 1fr; }
+      .trip-btns { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .site-header, .status-bar, .trip-btns, .actions, .saved-section, .toast { display: none !important; }
+      body { background: #fff; }
+      .card, .summary-box, .terms-box { break-inside: avoid; }
+      input, select, textarea { border: 1px solid #999 !important; background: #fff !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="site-logo">Duty<span>Slip</span></div>
+  <div class="slip-number" id="slipNumDisplay">DS-—</div>
+</header>
+
+<!-- Trip status bar -->
+<div class="status-bar">
+  <span class="status-label">Trip Status</span>
+  <span class="status-badge" id="statusBadge">Not Started</span>
+</div>
+
+<div class="container">
+
+  <!-- ══ TRIP CONTROL BUTTONS ══ -->
+  <div class="trip-btns">
+    <button class="btn-start" onclick="startTrip()">🟢 Start Trip</button>
+    <button class="btn-end"   onclick="endTrip()">🔴 End Trip</button>
+  </div>
+
+  <!-- ── GPS & TIMESTAMP TRACKING CARD ── -->
+  <div class="card">
+    <div class="card-header blue">
+      <span class="card-icon">📡</span>
+      <span class="card-title">Live Trip Tracking</span>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div class="ibox" id="iboxST">
+          <div class="ibox-lbl">🕐 Started At</div>
+          <div class="ibox-val" id="dispST">Not recorded</div>
+        </div>
+        <div class="ibox" id="iboxET">
+          <div class="ibox-lbl">🕑 Ended At</div>
+          <div class="ibox-val" id="dispET">Not recorded</div>
+        </div>
+        <div class="ibox" id="iboxSG">
+          <div class="ibox-lbl">📍 Start GPS</div>
+          <div class="ibox-val" id="dispSG">Not captured</div>
+        </div>
+        <div class="ibox" id="iboxEG">
+          <div class="ibox-lbl">📍 End GPS</div>
+          <div class="ibox-val" id="dispEG">Not captured</div>
+        </div>
+      </div>
+      <!-- Hidden store -->
+      <input type="hidden" id="actualStartTime"/>
+      <input type="hidden" id="actualEndTime"/>
+      <input type="hidden" id="startLat"/>
+      <input type="hidden" id="startLng"/>
+      <input type="hidden" id="endLat"/>
+      <input type="hidden" id="endLng"/>
+    </div>
+  </div>
+
+  <!-- ── SLIP DETAILS ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📋</span>
+      <span class="card-title">Slip Details</span>
+    </div>
+    <div class="card-body">
+      <div class="slip-meta">
+        <div class="field">
+          <label>Duty Slip No.</label>
+          <input type="text" id="dutySlipNo" placeholder="e.g. DS-001" oninput="updateSlipNum()"/>
+          <span class="hint" id="hintSlipNo">Required if no guest name</span>
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <input type="text" id="location" placeholder="City / Area"/>
+        </div>
+        <div class="field">
+          <label>Booking Ref #</label>
+          <input type="text" id="bookingRef" placeholder="Booking ID"/>
+        </div>
+        <div class="field">
+          <label>Report Date</label>
+          <input type="date" id="reportDate"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CLIENT INFO ── -->
+  <div class="card">
+    <div class="card-header green">
+      <span class="card-icon">👤</span>
+      <span class="card-title">Client Information</span>
+    </div>
+    <div class="card-body">
+      <div class="slip-meta">
+        <div class="field full">
+          <label>Report To (Guest Name) *</label>
+          <input type="text" id="reportTo" placeholder="Full name of guest"/>
+          <span class="hint" id="hintReportTo">Required if no slip number</span>
+        </div>
+        <div class="field">
+          <label>Mobile</label>
+          <input type="tel" id="mobile" placeholder="10-digit number" inputmode="tel" maxlength="10"/>
+          <span class="hint" id="hintMobile">Enter valid 10-digit number</span>
+        </div>
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" id="destination" placeholder="Drop destination"/>
+        </div>
+        <div class="field full">
+          <label>Address</label>
+          <textarea id="address" placeholder="Pickup address"></textarea>
+        </div>
+        <div class="field full">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="guest@email.com" inputmode="email"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CAR & CHAUFFEUR ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🚗</span>
+      <span class="card-title">Car &amp; Chauffeur</span>
+    </div>
+    <div class="card-body">
+      <div class="slip-meta">
+        <div class="field">
+          <label>Type of Car</label>
+          <select id="carType">
+            <option value="">Select type</option>
+            <option>Sedan</option><option>SUV</option>
+            <option>Luxury Sedan</option><option>Luxury SUV</option>
+            <option>Tempo Traveller</option><option>Bus</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Car No. *</label>
+          <input type="text" id="carNo" placeholder="MH 01 AB 1234"/>
+          <span class="hint" id="hintCarNo">Car number is required</span>
+        </div>
+        <div class="field full">
+          <label>Chauffeurs (Name)</label>
+          <input type="text" id="chauffeurs" placeholder="Driver name(s)"/>
+        </div>
+        <div class="field full">
+          <label>Remarks</label>
+          <textarea id="remarks" placeholder="Any special instructions or notes..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GUEST USES (Auto-calc) ── -->
+  <div class="card">
+    <div class="card-header amber">
+      <span class="card-icon">📊</span>
+      <span class="card-title">Guest Uses — Kms &amp; Timing</span>
+    </div>
+    <div class="card-body">
+      <div class="gt-head">
+        <span>Particular</span><span>Starting</span><span>Closing</span>
+        <span>Total</span><span>Extra</span><span>Extra Charge</span>
+      </div>
+
+      <!-- Kms row -->
+      <div class="gt-row">
+        <div class="gt-label">Kms</div>
+        <input type="number" id="kmStart" placeholder="0" min="0" step="0.1" inputmode="decimal" oninput="calcKm()"/>
+        <input type="number" id="kmClose" placeholder="0" min="0" step="0.1" inputmode="decimal" oninput="calcKm()"/>
+        <input type="number" id="kmTotal" class="calc-result" readonly placeholder="Auto"/>
+        <input type="number" id="kmExtra" placeholder="0" min="0" step="0.1" inputmode="decimal" oninput="calcKmCharge()"/>
+        <input type="number" id="kmExtraCharge" class="calc-result" readonly placeholder="Auto ₹"/>
+      </div>
+      <span class="hint" id="hintKm"     style="display:none;font-size:11px;">⚠ Closing KM must be greater than Starting KM</span>
+      <span class="hint warn" id="hintKmW" style="display:none;font-size:11px;">⚠ Total KM exceeds 300 — please verify</span>
+
+      <!-- Timing row -->
+      <div class="gt-row" style="margin-top:6px">
+        <div class="gt-label">Timing</div>
+        <input type="time" id="timeStart" oninput="calcTime()"/>
+        <input type="time" id="timeClose" oninput="calcTime()"/>
+        <input type="text" id="timeTotal" class="calc-result" readonly placeholder="Auto"/>
+        <input type="number" id="timeExtra" placeholder="Hrs" min="0" step="0.5" inputmode="decimal" oninput="calcTimeCharge()"/>
+        <input type="number" id="timeExtraCharge" class="calc-result" readonly placeholder="Auto ₹"/>
+      </div>
+      <span class="hint" id="hintTime" style="display:none;font-size:11px;">⚠ Enter both Start and Close times</span>
+
+      <div class="divider"></div>
+
+      <!-- Rates & billing -->
+      <div class="slip-meta">
+        <div class="field">
+          <label>Rate / Extra Km (₹)</label>
+          <input type="number" id="ratePerKm" placeholder="e.g. 12" min="0" step="0.5" inputmode="decimal" oninput="calcKmCharge()"/>
+        </div>
+        <div class="field">
+          <label>Rate / Extra Hr (₹)</label>
+          <input type="number" id="ratePerHr" placeholder="e.g. 150" min="0" inputmode="decimal" oninput="calcTimeCharge()"/>
+        </div>
+        <div class="field">
+          <label>Base Fare (₹)</label>
+          <input type="number" id="baseFare" placeholder="e.g. 800" min="0" inputmode="numeric" oninput="calcTotal()"/>
+        </div>
+        <div class="field">
+          <label>Toll / Parking (₹)</label>
+          <input type="number" id="toll" placeholder="0" min="0" inputmode="numeric" oninput="calcTotal()"/>
+        </div>
+        <div class="field">
+          <label>Cash Paid to Driver (₹)</label>
+          <input type="number" id="cashPaid" placeholder="0" min="0" inputmode="numeric" oninput="calcTotal()"/>
+        </div>
+        <div class="field">
+          <label>Total Bill (₹) — Auto</label>
+          <input type="text" id="totalBill" class="calc-result" readonly placeholder="Calculated"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ODOMETER PHOTO ── -->
+  <div class="card">
+    <div class="card-header blue">
+      <span class="card-icon">📸</span>
+      <span class="card-title">Odometer Proof Photo</span>
+    </div>
+    <div class="card-body">
+      <label class="odo-label" for="odoFile">
+        <input type="file" id="odoFile" accept="image/*" capture="environment" onchange="handleOdo(event)"/>
+        <span class="odo-icon">📷</span>
+        <span class="odo-text">Upload Odometer Photo</span>
+        <span class="odo-sub">Tap to take photo or choose from gallery</span>
+      </label>
+      <div class="odo-preview" id="odoPreview">
+        <img id="odoImg" src="" alt="Odometer"/>
+        <div class="odo-bar">
+          <span class="odo-ok">✓ Odometer photo attached</span>
+          <button class="odo-rm" onclick="removeOdo()">✕ Remove</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CAR RELEASE ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🔑</span>
+      <span class="card-title">Car Released At</span>
+    </div>
+    <div class="card-body">
+      <div class="release-row">
+        <div class="field"><label>Time</label><input type="time" id="releasedTime"/></div>
+        <div class="field"><label>Kms</label><input type="number" id="releasedKms" placeholder="0" min="0" inputmode="decimal"/></div>
+        <div class="field"><label>Place</label><input type="text" id="releasedPlace" placeholder="Location"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NEXT DAY INSTRUCTIONS ── -->
+  <div class="card">
+    <div class="card-header green">
+      <span class="card-icon">📅</span>
+      <span class="card-title">Client's Instruction for Next Day</span>
+    </div>
+    <div class="card-body">
+      <div class="next-day-row">
+        <div class="field"><label>Date</label><input type="date" id="nextDate"/></div>
+        <div class="field"><label>Time</label><input type="time" id="nextTime"/></div>
+        <div class="field"><label>Place</label><input type="text" id="nextPlace" placeholder="Pickup place"/></div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Journey Details</label>
+        <textarea id="journeyDetails" placeholder="Describe journey plan, stops, and specific requirements..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIVE SUMMARY ── -->
+  <div class="summary-box">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.45);margin-bottom:14px;">Live Summary</div>
+    <div class="summary-grid">
+      <div><div class="sum-label">Total Kms</div><div class="sum-value" id="sumKm">— km</div></div>
+      <div><div class="sum-label">Duration</div><div class="sum-value" id="sumTime">—</div></div>
+      <div><div class="sum-label">Extra Charges</div><div class="sum-value" id="sumExtra">₹—</div></div>
+      <div><div class="sum-label">Total Bill</div><div class="sum-value large" id="sumTotal">₹—</div></div>
+    </div>
+  </div>
+
+  <!-- ── FEEDBACK ── -->
+  <div class="feedback-box">
+    <div class="feedback-icon">⭐</div>
+    <div class="feedback-text">We welcome your feedback.</div>
+  </div>
+
+  <!-- ── TERMS ── -->
+  <div class="terms-box">
+    <div class="terms-title">Terms &amp; Conditions</div>
+    <ol class="terms-list">
+      <li>Please mention if any cash amount paid to driver.</li>
+      <li>Kms &amp; Hours will be counted from garage to garage.</li>
+      <li>Request to check your belongings before releasing the car.</li>
+      <li>Goods left in the car at client's risk.</li>
+      <li>I/We have checked the car before leaving.</li>
+    </ol>
+  </div>
+
+  <!-- ── SIGNATURE ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">✍️</span>
+      <span class="card-title">User Signature Note</span>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Signature / Acknowledgement Note</label>
+        <textarea id="signatureNote" placeholder="Please close the time &amp; km for correct billing. (Type name or acknowledgement)" style="min-height:50px"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACTION BUTTONS ── -->
+  <div class="actions">
+    <button class="btn btn-save"  onclick="saveSlip()">💾 Save Duty Slip</button>
+    <button class="btn btn-wa"    onclick="submitWhatsApp()">📲 Submit to Vendor</button>
+    <button class="btn btn-clear" onclick="clearForm()">🗑 Clear Form</button>
+    <button class="btn btn-print" onclick="window.print()">🖨 Print / Export</button>
+  </div>
+
+  <!-- ── SAVED SLIPS ── -->
+  <div class="saved-section">
+    <div class="saved-title">Saved Slips <span class="saved-count" id="savedCount">0</span></div>
+    <div id="savedList"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+const STORAGE_KEY = 'dutyslip_v3';
+let odoBase64 = null;
+let toastTimer = null;
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+  renderSaved();
+});
+
+function updateSlipNum() {
+  const v = document.getElementById('dutySlipNo').value.trim();
+  document.getElementById('slipNumDisplay').textContent = v || 'DS-—';
+}
+
+/* ══════════════════════════════════════════
+   VALIDATION
+══════════════════════════════════════════ */
+function clearErrors() {
+  document.querySelectorAll('.hint').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  ['hintKm','hintKmW','hintTime'].forEach(id => document.getElementById(id).style.display = 'none');
+}
+
+function markErr(inputId, hintId) {
+  const inp = document.getElementById(inputId);
+  const hnt = document.getElementById(hintId);
+  if (inp) inp.classList.add('field-error');
+  if (hnt) hnt.classList.add('show');
+}
+
+function validateForm() {
+  clearErrors();
+  let errors = [];
+
+  const name   = document.getElementById('reportTo').value.trim();
+  const slipNo = document.getElementById('dutySlipNo').value.trim();
+  const carNo  = document.getElementById('carNo').value.trim();
+  const mobile = document.getElementById('mobile').value.trim();
+  const kmSv   = document.getElementById('kmStart').value;
+  const kmCv   = document.getElementById('kmClose').value;
+  const tStart = document.getElementById('timeStart').value;
+  const tClose = document.getElementById('timeClose').value;
+
+  const kmDifference = kmClose - kmStart;
+
+if (kmDifference < 1) {
+  showToast("Invalid KM entry");
+  return;
+}
+
+if (kmDifference > 150) {
+  showToast("KM seems too high, please verify");
+}
+
+  // 1. Guest name OR slip no required
+  if (!name && !slipNo) {
+    markErr('reportTo',   'hintReportTo');
+    markErr('dutySlipNo', 'hintSlipNo');
+    errors.push('Guest Name or Slip No. is required');
+  }
+
+  // 2. Car number required
+  if (!carNo) {
+    markErr('carNo', 'hintCarNo');
+    errors.push('Car number is required');
+  }
+
+  // 3. Mobile 10 digits if entered
+  if (mobile && !/^\d{10}$/.test(mobile)) {
+    markErr('mobile', 'hintMobile');
+    errors.push('Mobile must be exactly 10 digits');
+  }
+
+  // 4. KM closing > starting if both filled
+  if (kmSv !== '' && kmCv !== '') {
+    const s = parseFloat(kmSv), c = parseFloat(kmCv);
+    if (c <= s) {
+      document.getElementById('kmClose').classList.add('field-error');
+      document.getElementById('hintKm').style.display = 'block';
+      errors.push('Closing KM must be greater than Starting KM');
+    } else if ((c - s) > 300) {
+      // Warning but don't block
+      document.getElementById('hintKmW').style.display = 'block';
+      showToast('⚠ KM over 300 — please verify', 'warn');
+    }
+  }
+
+  // 5. If either time entered, both required
+  if ((tStart || tClose) && !(tStart && tClose)) {
+    if (!tStart) document.getElementById('timeStart').classList.add('field-error');
+    if (!tClose) document.getElementById('timeClose').classList.add('field-error');
+    document.getElementById('hintTime').style.display = 'block';
+    errors.push('Enter both Start and Close times');
+  }
+
+  if (errors.length > 0) {
+    showToast('⚠ ' + errors[0], 'err');
+    return false;
+  }
+  return true;
+}
+
+/* ══════════════════════════════════════════
+   CALCULATIONS
+══════════════════════════════════════════ */
+function calcKm() {
+  const s = parseFloat(document.getElementById('kmStart').value) || 0;
+  const c = parseFloat(document.getElementById('kmClose').value) || 0;
+  const total = c > s ? +(c - s).toFixed(1) : 0;
+  document.getElementById('kmTotal').value = total || '';
+  document.getElementById('sumKm').textContent = total ? total + ' km' : '— km';
+  document.getElementById('hintKm').style.display  = 'none';
+  document.getElementById('hintKmW').style.display = total > 300 ? 'block' : 'none';
+  document.getElementById('kmClose').classList.remove('field-error');
+  calcKmCharge();
+}
+
+function calcKmCharge() {
+  const extra  = parseFloat(document.getElementById('kmExtra').value) || 0;
+  const rate   = parseFloat(document.getElementById('ratePerKm').value) || 0;
+  document.getElementById('kmExtraCharge').value = extra && rate ? +(extra * rate).toFixed(2) : '';
+  calcTotal();
+}
+
+function calcTime() {
+  const s = document.getElementById('timeStart').value;
+  const c = document.getElementById('timeClose').value;
+  if (s && c) {
+    const [sh, sm] = s.split(':').map(Number);
+    const [ch, cm] = c.split(':').map(Number);
+    let mins = (ch * 60 + cm) - (sh * 60 + sm);
+    if (mins < 0) mins += 1440;
+    const label = Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm';
+    document.getElementById('timeTotal').value = label;
+    document.getElementById('sumTime').textContent = label;
+  } else {
+    document.getElementById('timeTotal').value = '';
+    document.getElementById('sumTime').textContent = '—';
+  }
+  calcTimeCharge();
+}
+
+function calcTimeCharge() {
+  const extra  = parseFloat(document.getElementById('timeExtra').value) || 0;
+  const rate   = parseFloat(document.getElementById('ratePerHr').value) || 0;
+  document.getElementById('timeExtraCharge').value = extra && rate ? +(extra * rate).toFixed(2) : '';
+  calcTotal();
+}
+
+function calcTotal() {
+  const base    = parseFloat(document.getElementById('baseFare').value)        || 0;
+  const kmCh    = parseFloat(document.getElementById('kmExtraCharge').value)   || 0;
+  const hrCh    = parseFloat(document.getElementById('timeExtraCharge').value) || 0;
+  const toll    = parseFloat(document.getElementById('toll').value)            || 0;
+  const cash    = parseFloat(document.getElementById('cashPaid').value)        || 0;
+  const total   = base + kmCh + hrCh + toll - cash;
+  document.getElementById('totalBill').value        = total > 0 ? '₹' + total.toFixed(2) : '';
+  document.getElementById('sumTotal').textContent   = total > 0 ? '₹' + total.toFixed(2) : '₹—';
+  const extra = kmCh + hrCh;
+  document.getElementById('sumExtra').textContent   = extra > 0 ? '₹' + extra.toFixed(2) : '₹—';
+}
+
+/* ══════════════════════════════════════════
+   GPS CAPTURE
+══════════════════════════════════════════ */
+function getGPS(onOk, onFail) {
+  if (!navigator.geolocation) { showToast('GPS not available on device', 'err'); onFail && onFail(); return; }
+  navigator.geolocation.getCurrentPosition(
+    p => onOk(p.coords.latitude, p.coords.longitude),
+    () => { showToast('📍 Location required for verification', 'warn'); onFail && onFail(); },
+    { enableHighAccuracy: true, timeout: 12000 }
+  );
+}
+
+/* ══════════════════════════════════════════
+   START / END TRIP
+══════════════════════════════════════════ */
+function fmtNow(d) {
+  return d.toLocaleString('en-IN', {
+    day:'2-digit', month:'short', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true
+  });
+}
+
+function startTrip() {
+  const now = new Date();
+  const ts  = fmtNow(now);
+  document.getElementById('actualStartTime').value = ts;
+  setInfoBox('iboxST', 'dispST', ts);
+
+  // Auto-fill timeStart
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('timeStart').value = hh + ':' + mm;
+  calcTime();
+
+  getGPS((lat, lng) => {
+    document.getElementById('startLat').value = lat.toFixed(6);
+    document.getElementById('startLng').value = lng.toFixed(6);
+    setInfoBox('iboxSG', 'dispSG', lat.toFixed(5) + ', ' + lng.toFixed(5));
+    showToast('🟢 Trip Started · GPS captured', 'ok');
+  }, () => {
+    setInfoBox('iboxSG', 'dispSG', 'Permission denied');
+    showToast('🟢 Trip Started — no GPS', 'info');
+  });
+
+  setBadge('active', '🟢 In Progress');
+}
+
+function endTrip() {
+  const now = new Date();
+  const ts  = fmtNow(now);
+  document.getElementById('actualEndTime').value = ts;
+  setInfoBox('iboxET', 'dispET', ts);
+
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('timeClose').value = hh + ':' + mm;
+  calcTime();
+
+  getGPS((lat, lng) => {
+    document.getElementById('endLat').value = lat.toFixed(6);
+    document.getElementById('endLng').value = lng.toFixed(6);
+    setInfoBox('iboxEG', 'dispEG', lat.toFixed(5) + ', ' + lng.toFixed(5));
+    showToast('🔴 Trip Ended · GPS captured', 'ok');
+  }, () => {
+    setInfoBox('iboxEG', 'dispEG', 'Permission denied');
+    showToast('🔴 Trip Ended — no GPS', 'info');
+  });
+
+  setBadge('done', '✅ Completed');
+}
+
+function setInfoBox(boxId, dispId, text) {
+  document.getElementById(boxId).classList.add('live');
+  document.getElementById(dispId).textContent = text;
+}
+
+function setBadge(cls, text) {
+  const b = document.getElementById('statusBadge');
+  b.className = 'status-badge ' + cls;
+  b.textContent = text;
+}
+
+/* ══════════════════════════════════════════
+   ODOMETER PHOTO
+══════════════════════════════════════════ */
+function handleOdo(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) { showToast('⚠ Image too large (max 4MB)', 'warn'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    odoBase64 = ev.target.result;
+    document.getElementById('odoImg').src = odoBase64;
+    document.getElementById('odoPreview').classList.add('show');
+    showToast('📷 Odometer photo attached', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeOdo() {
+  odoBase64 = null;
+  document.getElementById('odoFile').value = '';
+  document.getElementById('odoImg').src = '';
+  document.getElementById('odoPreview').classList.remove('show');
+  showToast('Photo removed', 'info');
+}
+
+/* ══════════════════════════════════════════
+   DATA COLLECT / POPULATE
+══════════════════════════════════════════ */
+const FIDS = [
+  'dutySlipNo','location','bookingRef','reportDate',
+  'reportTo','mobile','destination','address','email',
+  'carType','carNo','chauffeurs','remarks',
+  'kmStart','kmClose','kmTotal','kmExtra','kmExtraCharge',
+  'timeStart','timeClose','timeTotal','timeExtra','timeExtraCharge',
+  'ratePerKm','ratePerHr','baseFare','toll','cashPaid','totalBill',
+  'releasedTime','releasedKms','releasedPlace',
+  'nextDate','nextTime','nextPlace','journeyDetails','signatureNote',
+  'actualStartTime','actualEndTime',
+  'startLat','startLng','endLat','endLng'
+];
+
+function collectData() {
+  const obj = { savedAt: Date.now() };
+  FIDS.forEach(id => { const el = document.getElementById(id); if (el) obj[id] = el.value; });
+  if (odoBase64) obj.odoPhoto = odoBase64;
+  return obj;
+}
+
+function populateForm(data) {
+  FIDS.forEach(id => { const el = document.getElementById(id); if (el && data[id] !== undefined) el.value = data[id]; });
+
+  // Restore odo photo
+  if (data.odoPhoto) {
+    odoBase64 = data.odoPhoto;
+    document.getElementById('odoImg').src = odoBase64;
+    document.getElementById('odoPreview').classList.add('show');
+  } else {
+    odoBase64 = null;
+    document.getElementById('odoPreview').classList.remove('show');
+  }
+
+  // Restore info boxes
+  if (data.actualStartTime) setInfoBox('iboxST', 'dispST', data.actualStartTime);
+  if (data.actualEndTime)   setInfoBox('iboxET', 'dispET', data.actualEndTime);
+  if (data.startLat && data.startLng) setInfoBox('iboxSG', 'dispSG', parseFloat(data.startLat).toFixed(5) + ', ' + parseFloat(data.startLng).toFixed(5));
+  if (data.endLat   && data.endLng)   setInfoBox('iboxEG', 'dispEG', parseFloat(data.endLat).toFixed(5) + ', ' + parseFloat(data.endLng).toFixed(5));
+
+  updateSlipNum(); calcKm(); calcTime(); calcTotal();
+  clearErrors();
+}
+
+/* ══════════════════════════════════════════
+   SAVE / LOAD / DELETE
+══════════════════════════════════════════ */
+function loadAll()     { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+function persistAll(a) { localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); }
+
+function saveSlip() {
+  if (!validateForm()) return;
+  const data = collectData();
+  const ts   = new Date(data.savedAt).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
+  const all  = loadAll();
+  const idx  = all.findIndex(s => s.dutySlipNo && s.dutySlipNo === data.dutySlipNo && data.dutySlipNo);
+  if (idx >= 0) all[idx] = data; else all.unshift(data);
+  persistAll(all);
+  renderSaved();
+  showToast('✓ Saved at ' + ts, 'ok');
+}
+
+function deleteSlip(i) {
+  if (!confirm('Delete this slip?')) return;
+  const all = loadAll(); all.splice(i, 1); persistAll(all); renderSaved();
+  showToast('Slip deleted', 'info');
+}
+
+function loadSlip(i) {
+  populateForm(loadAll()[i]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Slip loaded', 'info');
+}
+
+function clearForm() {
+  if (!confirm('Clear the form? Unsaved changes will be lost.')) return;
+  document.querySelectorAll('input:not([type=file]), select, textarea').forEach(el => { el.value = ''; el.classList.remove('field-error'); });
+  document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('slipNumDisplay').textContent = 'DS-—';
+  setBadge('', 'Not Started');
+
+  // Reset info boxes
+  ['iboxST','iboxET','iboxSG','iboxEG'].forEach(id => document.getElementById(id).classList.remove('live'));
+  document.getElementById('dispST').textContent = 'Not recorded';
+  document.getElementById('dispET').textContent = 'Not recorded';
+  document.getElementById('dispSG').textContent = 'Not captured';
+  document.getElementById('dispEG').textContent = 'Not captured';
+
+  // Reset summary
+  document.getElementById('sumKm').textContent    = '— km';
+  document.getElementById('sumTime').textContent  = '—';
+  document.getElementById('sumExtra').textContent = '₹—';
+  document.getElementById('sumTotal').textContent = '₹—';
+
+  removeOdo(); clearErrors();
+  showToast('Form cleared', 'info');
+}
+
+/* ══════════════════════════════════════════
+   WHATSAPP SUBMIT
+══════════════════════════════════════════ */
+function submitWhatsApp() {
+  if (!validateForm()) return;
+  const g = id => document.getElementById(id).value.trim();
+
+  const startGps = g('startLat') && g('startLng') ? g('startLat') + ', ' + g('startLng') : 'Not captured';
+  const endGps   = g('endLat')   && g('endLng')   ? g('endLat')   + ', ' + g('endLng')   : 'Not captured';
+
+  const msg = [
+    '🚗 *DUTY SLIP*',
+    '──────────────────────',
+    `📋 *Slip No:* ${g('dutySlipNo') || '—'}`,
+    `📅 *Date:* ${g('reportDate') || '—'}`,
+    `📍 *Location:* ${g('location') || '—'}`,
+    `🔖 *Booking Ref:* ${g('bookingRef') || '—'}`,
+    '',
+    '👤 *CLIENT*',
+    `Name: ${g('reportTo') || '—'}`,
+    `Mobile: ${g('mobile') || '—'}`,
+    `Destination: ${g('destination') || '—'}`,
+    '',
+    '🚘 *CAR & DRIVER*',
+    `Car No: ${g('carNo') || '—'}`,
+    `Type: ${g('carType') || '—'}`,
+    `Chauffeur: ${g('chauffeurs') || '—'}`,
+    '',
+    '📊 *TRIP DETAILS*',
+    `KM: ${g('kmStart') || '—'} → ${g('kmClose') || '—'} (Total: ${g('kmTotal') || '—'} km)`,
+    `Time: ${g('timeStart') || '—'} → ${g('timeClose') || '—'} (${g('timeTotal') || '—'})`,
+    '',
+    '💰 *BILLING*',
+    `Base Fare: ₹${g('baseFare') || '0'}`,
+    `Toll/Parking: ₹${g('toll') || '0'}`,
+    `Extra KM Charge: ₹${g('kmExtraCharge') || '0'}`,
+    `Extra Hr Charge: ₹${g('timeExtraCharge') || '0'}`,
+    `Cash Paid: ₹${g('cashPaid') || '0'}`,
+    `*Total Bill: ${g('totalBill') || '₹0'}*`,
+    '',
+    '🕐 *TIMESTAMPS*',
+    `Started: ${g('actualStartTime') || '—'}`,
+    `Ended:   ${g('actualEndTime') || '—'}`,
+    '',
+    '📡 *GPS LOCATIONS*',
+    `Start: ${startGps}`,
+    `End:   ${endGps}`,
+    '──────────────────────',
+    '_Sent via DutySlip App_'
+  ].join('\n');
+
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+/* ══════════════════════════════════════════
+   RENDER SAVED SLIPS
+══════════════════════════════════════════ */
+function renderSaved() {
+  const all  = loadAll();
+  document.getElementById('savedCount').textContent = all.length;
+  const list = document.getElementById('savedList');
+
+  if (!all.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:14px;padding:20px 0;">No saved slips yet</div>';
+    return;
+  }
+
+  list.innerHTML = all.map((s, i) => {
+    const ts = s.savedAt ? new Date(s.savedAt).toLocaleString('en-IN', {
+      day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
+    }) : '—';
+    return `
+      <div class="slip-card">
+        <div class="sc-top">
+          <div>
+            <div class="sc-name">${esc(s.reportTo || '(No guest name)')}</div>
+            <div class="sc-ref">${esc(s.dutySlipNo || '—')} · ${s.reportDate || '—'}</div>
+            <div class="sc-saved">💾 ${ts}</div>
+          </div>
+          <div class="sc-amount">${s.totalBill || '—'}</div>
+        </div>
+        <div class="sc-chips">
+          ${s.carNo       ? `<span class="chip">🚗 ${esc(s.carNo)}</span>` : ''}
+          ${s.destination ? `<span class="chip">📍 ${esc(s.destination)}</span>` : ''}
+          ${s.kmTotal     ? `<span class="chip">📏 ${s.kmTotal} km</span>` : ''}
+          ${s.chauffeurs  ? `<span class="chip">👨‍✈️ ${esc(s.chauffeurs)}</span>` : ''}
+          ${s.startLat    ? `<span class="chip">📡 GPS</span>` : ''}
+          ${s.odoPhoto    ? `<span class="chip">📸 Photo</span>` : ''}
+        </div>
+        <div class="sc-actions">
+          <button class="btn-sm btn-sm-load" onclick="loadSlip(${i})">📂 Load</button>
+          <button class="btn-sm btn-sm-del"  onclick="deleteSlip(${i})">🗑 Delete</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast t-' + type + ' show';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
